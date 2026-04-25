@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Button, Separator } from "@heroui/react";
 import Sidebar from "@/components/Sidebar";
 import PreviewWrapper from "@/components/PreviewWrapper";
 import AllScreensCanvas from "@/components/AllScreensCanvas";
@@ -8,9 +9,9 @@ import FormScreen from "@/components/FormScreen";
 import GeneratingScreen from "@/components/GeneratingScreen";
 import ResultScreen from "@/components/ResultScreen";
 
-type Step = "form" | "generating" | "result";
+type Step      = "form" | "generating" | "result";
 type DeviceMode = "desktop" | "mobile";
-type ViewMode = "preview" | "all-screens";
+type ViewMode   = "preview" | "all-screens";
 
 interface FormData {
   workArea: string;
@@ -23,30 +24,29 @@ interface ApiResult {
   templateName: string;
 }
 
-const VIEW_TOGGLES: { id: ViewMode; label: string; icon: string }[] = [
-  { id: "preview",     label: "Preview",     icon: "▶" },
-  { id: "all-screens", label: "All Screens",  icon: "⊞" },
+const VIEW_TOGGLES: { id: ViewMode; label: string }[] = [
+  { id: "preview",     label: "▶  Preview"     },
+  { id: "all-screens", label: "⊞  All Screens" },
 ];
 
-const DEVICE_TOGGLES: { id: DeviceMode; label: string; icon: string }[] = [
-  { id: "mobile",  label: "Mobile",  icon: "📱" },
-  { id: "desktop", label: "Desktop", icon: "🖥" },
+const DEVICE_TOGGLES: { id: DeviceMode; label: string }[] = [
+  { id: "mobile",  label: "📱  Mobile"  },
+  { id: "desktop", label: "🖥  Desktop" },
 ];
 
 export default function OnboardingPage() {
-  const [step, setStep] = useState<Step>("form");
-  const [viewMode, setViewMode] = useState<ViewMode>("preview");
-  const [deviceMode, setDeviceMode] = useState<DeviceMode>("desktop");
-  const [formData, setFormData] = useState<FormData | null>(null);
-  const [resultHtml, setResultHtml] = useState("");
+  const [step,         setStep]         = useState<Step>("form");
+  const [viewMode,     setViewMode]     = useState<ViewMode>("preview");
+  const [deviceMode,   setDeviceMode]   = useState<DeviceMode>("desktop");
+  const [formData,     setFormData]     = useState<FormData | null>(null);
+  const [resultHtml,   setResultHtml]   = useState("");
   const [templateName, setTemplateName] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [animationDone, setAnimationDone] = useState(false);
-  const [apiResult, setApiResult] = useState<ApiResult | null>(null);
+  const [error,        setError]        = useState<string | null>(null);
+  const [animationDone,setAnimationDone]= useState(false);
+  const [apiResult,    setApiResult]    = useState<ApiResult | null>(null);
 
   useEffect(() => {
     if (step !== "generating" || !formData) return;
-
     setAnimationDone(false);
     setApiResult(null);
     setError(null);
@@ -120,49 +120,40 @@ export default function OnboardingPage() {
       <Sidebar activeId="vibe-coding" />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top navbar */}
+        {/* Navbar */}
         <header className="h-12 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 gap-4">
           <span className="text-sm font-medium text-slate-500 flex-shrink-0">
             Vibe Coding Onboarding
           </span>
 
           <div className="flex items-center gap-3">
-            {/* View mode toggle */}
-            <div className="flex items-center bg-slate-100 rounded-lg p-1 gap-0.5">
-              {VIEW_TOGGLES.map(({ id, label, icon }) => (
-                <button
+            {/* View mode */}
+            <div className="flex items-center gap-1">
+              {VIEW_TOGGLES.map(({ id, label }) => (
+                <Button
                   key={id}
-                  onClick={() => setViewMode(id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
-                    viewMode === id
-                      ? "bg-white text-slate-900 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
-                  }`}
+                  variant={viewMode === id ? "secondary" : "ghost"}
+                  size="sm"
+                  onPress={() => setViewMode(id)}
                 >
-                  <span>{icon}</span>
                   {label}
-                </button>
+                </Button>
               ))}
             </div>
 
-            {/* Divider */}
-            <div className="w-px h-5 bg-slate-200" />
+            <Separator orientation="vertical" className="h-5" />
 
-            {/* Device mode toggle */}
-            <div className="flex items-center bg-slate-100 rounded-lg p-1 gap-0.5">
-              {DEVICE_TOGGLES.map(({ id, label, icon }) => (
-                <button
+            {/* Device mode */}
+            <div className="flex items-center gap-1">
+              {DEVICE_TOGGLES.map(({ id, label }) => (
+                <Button
                   key={id}
-                  onClick={() => setDeviceMode(id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
-                    deviceMode === id
-                      ? "bg-white text-slate-900 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
-                  }`}
+                  variant={deviceMode === id ? "secondary" : "ghost"}
+                  size="sm"
+                  onPress={() => setDeviceMode(id)}
                 >
-                  <span>{icon}</span>
                   {label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
