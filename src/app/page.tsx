@@ -16,7 +16,9 @@ type ViewMode   = "preview" | "all-screens";
 interface FormData {
   workArea: string;
   whatToAutomate: string;
-  forWhom: string;
+  templateId: string;
+  primaryColor: string;
+  workspaceName: string;
 }
 
 interface ApiResult {

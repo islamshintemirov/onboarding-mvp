@@ -1,18 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { selectTemplate } from "@/templates/index";
-import { fillPlaceholders } from "@/lib/templateUtils";
+import { TEMPLATES } from "@/templates/index";
+import { fillPlaceholders, toTitleCase } from "@/lib/templateUtils";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
-    const { workArea, whatToAutomate, forWhom } = await request.json();
+    const { workArea, whatToAutomate, templateId, primaryColor, workspaceName } =
+      await request.json();
 
-    if (!workArea?.trim() || !whatToAutomate?.trim() || !forWhom?.trim()) {
+    if (!workArea?.trim() || !whatToAutomate?.trim() || !templateId?.trim()) {
       return NextResponse.json({ error: "All fields are required" }, { status: 400 });
     }
 
-    const template = selectTemplate(workArea, whatToAutomate, forWhom);
-    const vars = template.buildVars(workArea, whatToAutomate, forWhom);
+    // Find template by explicit ID
+    const template = TEMPLATES.find((t) => t.id === templateId);
+    if (!template) {
+      return NextResponse.json({ error: "Unknown template" }, { status: 400 });
+    }
+
+    // Build base vars (forWhom defaults to "My Team")
+    const vars = template.buildVars(workArea, whatToAutomate, "My Team");
+
+    // Apply personalizations
+    if (primaryColor?.trim()) {
+      vars.PRIMARY_COLOR = primaryColor.trim();
+    }
+    if (workspaceName?.trim()) {
+      vars.APP_TITLE = toTitleCase(workspaceName.trim());
+    }
+
     const html = fillPlaceholders(template.html, vars);
 
     // Log to Supabase — fully isolated, never affects the response
@@ -20,7 +36,7 @@ export async function POST(request: NextRequest) {
       supabaseAdmin().from("onboardings").insert({
         work_area:        workArea.trim(),
         what_to_automate: whatToAutomate.trim(),
-        for_whom:         forWhom.trim(),
+        for_whom:         "My Team",
         template_name:    template.name,
       }).then(({ error }) => {
         if (error) console.error("Supabase insert error:", error.message);
