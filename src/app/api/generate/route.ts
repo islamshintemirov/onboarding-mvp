@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const html = fillPlaceholders(template.html, vars);
 
     // Log to Supabase (fire-and-forget — don't block the response)
-    supabaseAdmin.from("onboardings").insert({
+    supabaseAdmin().from("onboardings").insert({
       work_area:       workArea.trim(),
       what_to_automate: whatToAutomate.trim(),
       for_whom:        forWhom.trim(),

@@ -1,11 +1,15 @@
 import { createClient } from "@supabase/supabase-js";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const service = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+function getClient(key: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!url || !key) throw new Error("Supabase env vars missing");
+  return createClient(url, key);
+}
 
 // Browser / client components — uses anon key, respects RLS
-export const supabase = createClient(url, anon);
+export const supabase = () =>
+  getClient(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 // Server only — uses service role key, bypasses RLS
-export const supabaseAdmin = createClient(url, service);
+export const supabaseAdmin = () =>
+  getClient(process.env.SUPABASE_SERVICE_ROLE_KEY!);
