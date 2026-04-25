@@ -90,7 +90,7 @@ export default function OnboardingPage() {
         </div>
       )}
       {step === "result" && (
-        <div key="result" className="min-h-full flex flex-col p-6 screen-enter">
+        <div key="result" className="min-h-full flex flex-col screen-enter">
           <ResultScreen
             html={resultHtml}
             templateName={templateName}
