@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     let userId: string | null = null;
     try {
       const { data } = await supabaseAdmin()
-        .from("users")
+        .from("jobescape_users")
         .upsert(
           {
             jobescape_email: userEmail,
