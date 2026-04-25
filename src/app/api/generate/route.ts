@@ -15,15 +15,19 @@ export async function POST(request: NextRequest) {
     const vars = template.buildVars(workArea, whatToAutomate, forWhom);
     const html = fillPlaceholders(template.html, vars);
 
-    // Log to Supabase (fire-and-forget — don't block the response)
-    supabaseAdmin().from("onboardings").insert({
-      work_area:       workArea.trim(),
-      what_to_automate: whatToAutomate.trim(),
-      for_whom:        forWhom.trim(),
-      template_name:   template.name,
-    }).then(({ error }) => {
-      if (error) console.error("Supabase insert error:", error.message);
-    });
+    // Log to Supabase — fully isolated, never affects the response
+    try {
+      supabaseAdmin().from("onboardings").insert({
+        work_area:        workArea.trim(),
+        what_to_automate: whatToAutomate.trim(),
+        for_whom:         forWhom.trim(),
+        template_name:    template.name,
+      }).then(({ error }) => {
+        if (error) console.error("Supabase insert error:", error.message);
+      });
+    } catch (e) {
+      console.warn("Supabase unavailable:", e);
+    }
 
     return NextResponse.json({ html, templateName: template.name });
   } catch (error) {
