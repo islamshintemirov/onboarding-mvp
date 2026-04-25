@@ -23,17 +23,14 @@ export default function GeneratingScreen({ onComplete }: Props) {
   useEffect(() => {
     const increment = (TICK_MS / TOTAL_MS) * 100;
     const interval = setInterval(() => {
-      setProgress((prev) => {
-        const next = Math.min(prev + increment, 100);
-        if (next >= 100) {
-          clearInterval(interval);
-          onComplete();
-        }
-        return next;
-      });
+      setProgress((prev) => Math.min(prev + increment, 100));
     }, TICK_MS);
     return () => clearInterval(interval);
-  }, [onComplete]);
+  }, []);
+
+  useEffect(() => {
+    if (progress >= 100) onComplete();
+  }, [progress, onComplete]);
 
   const statusText =
     [...STATUS_STEPS].reverse().find((s) => progress >= s.at)?.text ??
