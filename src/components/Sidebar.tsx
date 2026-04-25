@@ -2,6 +2,12 @@
 
 import { Button, Separator } from "@heroui/react";
 
+interface User {
+  id: string | null;
+  email: string;
+  fullName: string | null;
+}
+
 interface Onboarding {
   id: string;
   label: string;
@@ -14,9 +20,14 @@ const ONBOARDINGS: Onboarding[] = [
 
 interface Props {
   activeId?: string;
+  user?: User | null;
+  onLogout?: () => void;
 }
 
-export default function Sidebar({ activeId = "vibe-coding" }: Props) {
+export default function Sidebar({ activeId = "vibe-coding", user, onLogout }: Props) {
+  const displayName = user?.fullName || user?.email?.split("@")[0] || "User";
+  const initials = displayName.slice(0, 2).toUpperCase();
+
   return (
     <aside className="w-56 shrink-0 bg-white border-r border-slate-200 flex flex-col min-h-screen">
       {/* Logo */}
@@ -49,10 +60,23 @@ export default function Sidebar({ activeId = "vibe-coding" }: Props) {
 
       <Separator />
 
-      {/* Footer */}
-      <div className="px-5 py-3">
-        <p className="text-[11px] text-slate-400">v0.1 · MVP</p>
-      </div>
+      {/* User */}
+      {user && (
+        <div className="px-4 py-3 flex flex-col gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-slate-700 truncate">{displayName}</p>
+              <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" fullWidth className="justify-start text-slate-400" onPress={onLogout}>
+            Sign out
+          </Button>
+        </div>
+      )}
     </aside>
   );
 }

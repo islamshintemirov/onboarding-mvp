@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
-    const { workArea, whatToAutomate, templateId, primaryColor, workspaceName } =
+    const { workArea, whatToAutomate, templateId, primaryColor, workspaceName, userId } =
       await request.json();
 
     if (!workArea?.trim() || !whatToAutomate?.trim() || !templateId?.trim()) {
@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
         what_to_automate: whatToAutomate.trim(),
         for_whom:         "My Team",
         template_name:    template.name,
+        user_id:          userId ?? null,
       }).then(({ error }) => {
         if (error) console.error("Supabase insert error:", error.message);
       });

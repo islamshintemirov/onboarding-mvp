@@ -8,10 +8,17 @@ import AllScreensCanvas from "@/components/AllScreensCanvas";
 import FormScreen from "@/components/FormScreen";
 import GeneratingScreen from "@/components/GeneratingScreen";
 import ResultScreen from "@/components/ResultScreen";
+import LoginScreen from "@/components/LoginScreen";
 
-type Step      = "form" | "generating" | "result";
+type Step       = "form" | "generating" | "result";
 type DeviceMode = "desktop" | "mobile";
 type ViewMode   = "preview" | "all-screens";
+
+interface User {
+  id: string | null;
+  email: string;
+  fullName: string | null;
+}
 
 interface FormData {
   workArea: string;
@@ -26,6 +33,8 @@ interface ApiResult {
   templateName: string;
 }
 
+const SESSION_KEY = "jbe_session";
+
 const VIEW_TOGGLES: { id: ViewMode; label: string }[] = [
   { id: "preview",     label: "▶  Preview"     },
   { id: "all-screens", label: "⊞  All Screens" },
@@ -37,16 +46,49 @@ const DEVICE_TOGGLES: { id: DeviceMode; label: string }[] = [
 ];
 
 export default function OnboardingPage() {
-  const [step,         setStep]         = useState<Step>("form");
-  const [viewMode,     setViewMode]     = useState<ViewMode>("preview");
-  const [deviceMode,   setDeviceMode]   = useState<DeviceMode>("desktop");
-  const [formData,     setFormData]     = useState<FormData | null>(null);
-  const [resultHtml,   setResultHtml]   = useState("");
-  const [templateName, setTemplateName] = useState("");
-  const [error,        setError]        = useState<string | null>(null);
-  const [animationDone,setAnimationDone]= useState(false);
-  const [apiResult,    setApiResult]    = useState<ApiResult | null>(null);
+  const [user,          setUser]          = useState<User | null>(null);
+  const [accessToken,   setAccessToken]   = useState<string | null>(null);
+  const [authChecked,   setAuthChecked]   = useState(false);
 
+  const [step,          setStep]          = useState<Step>("form");
+  const [viewMode,      setViewMode]      = useState<ViewMode>("preview");
+  const [deviceMode,    setDeviceMode]    = useState<DeviceMode>("desktop");
+  const [formData,      setFormData]      = useState<FormData | null>(null);
+  const [resultHtml,    setResultHtml]    = useState("");
+  const [templateName,  setTemplateName]  = useState("");
+  const [error,         setError]         = useState<string | null>(null);
+  const [animationDone, setAnimationDone] = useState(false);
+  const [apiResult,     setApiResult]     = useState<ApiResult | null>(null);
+
+  // Restore session from localStorage on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (raw) {
+        const session = JSON.parse(raw) as { user: User; access: string };
+        setUser(session.user);
+        setAccessToken(session.access);
+      }
+    } catch {
+      localStorage.removeItem(SESSION_KEY);
+    } finally {
+      setAuthChecked(true);
+    }
+  }, []);
+
+  function handleLogin(u: User, access: string, refresh: string) {
+    setUser(u);
+    setAccessToken(access);
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ user: u, access, refresh }));
+  }
+
+  function handleLogout() {
+    setUser(null);
+    setAccessToken(null);
+    localStorage.removeItem(SESSION_KEY);
+  }
+
+  // Generate API call
   useEffect(() => {
     if (step !== "generating" || !formData) return;
     setAnimationDone(false);
@@ -56,7 +98,7 @@ export default function OnboardingPage() {
     fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+      body: JSON.stringify({ ...formData, userId: user?.id }),
     })
       .then(async (res) => {
         const data = await res.json();
@@ -68,7 +110,7 @@ export default function OnboardingPage() {
         setError(err instanceof Error ? err.message : "Something went wrong");
         setStep("form");
       });
-  }, [step, formData]);
+  }, [step, formData, user]);
 
   useEffect(() => {
     if (animationDone && apiResult) {
@@ -90,6 +132,14 @@ export default function OnboardingPage() {
     setApiResult(null);
     setAnimationDone(false);
     setError(null);
+  }
+
+  // Wait for localStorage check before rendering
+  if (!authChecked) return null;
+
+  // Auth gate
+  if (!user) {
+    return <LoginScreen onLogin={handleLogin} />;
   }
 
   const previewContent = (
@@ -119,7 +169,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <Sidebar activeId="vibe-coding" />
+      <Sidebar activeId="vibe-coding" user={user} onLogout={handleLogout} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Navbar */}
@@ -129,15 +179,9 @@ export default function OnboardingPage() {
           </span>
 
           <div className="flex items-center gap-3">
-            {/* View mode */}
             <div className="flex items-center gap-1">
               {VIEW_TOGGLES.map(({ id, label }) => (
-                <Button
-                  key={id}
-                  variant={viewMode === id ? "secondary" : "ghost"}
-                  size="sm"
-                  onPress={() => setViewMode(id)}
-                >
+                <Button key={id} variant={viewMode === id ? "secondary" : "ghost"} size="sm" onPress={() => setViewMode(id)}>
                   {label}
                 </Button>
               ))}
@@ -145,15 +189,9 @@ export default function OnboardingPage() {
 
             <Separator orientation="vertical" className="h-5" />
 
-            {/* Device mode */}
             <div className="flex items-center gap-1">
               {DEVICE_TOGGLES.map(({ id, label }) => (
-                <Button
-                  key={id}
-                  variant={deviceMode === id ? "secondary" : "ghost"}
-                  size="sm"
-                  onPress={() => setDeviceMode(id)}
-                >
+                <Button key={id} variant={deviceMode === id ? "secondary" : "ghost"} size="sm" onPress={() => setDeviceMode(id)}>
                   {label}
                 </Button>
               ))}
@@ -164,16 +202,10 @@ export default function OnboardingPage() {
         {/* Main area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {viewMode === "all-screens" ? (
-            <AllScreensCanvas
-              deviceMode={deviceMode}
-              resultHtml={resultHtml}
-              templateName={templateName}
-            />
+            <AllScreensCanvas deviceMode={deviceMode} resultHtml={resultHtml} templateName={templateName} />
           ) : (
             <div className="flex-1 overflow-auto bg-slate-200">
-              <PreviewWrapper mode={deviceMode}>
-                {previewContent}
-              </PreviewWrapper>
+              <PreviewWrapper mode={deviceMode}>{previewContent}</PreviewWrapper>
             </div>
           )}
         </div>
