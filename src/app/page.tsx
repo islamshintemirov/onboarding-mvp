@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Sidebar from "@/components/Sidebar";
 import FormScreen from "@/components/FormScreen";
 import GeneratingScreen from "@/components/GeneratingScreen";
 import ResultScreen from "@/components/ResultScreen";
@@ -27,7 +28,6 @@ export default function OnboardingPage() {
   const [animationDone, setAnimationDone] = useState(false);
   const [apiResult, setApiResult] = useState<ApiResult | null>(null);
 
-  // Fire fetch when step becomes "generating"
   useEffect(() => {
     if (step !== "generating" || !formData) return;
 
@@ -52,7 +52,6 @@ export default function OnboardingPage() {
       });
   }, [step, formData]);
 
-  // Transition to result only when both the animation and API are done
   useEffect(() => {
     if (animationDone && apiResult) {
       setResultHtml(apiResult.html);
@@ -75,29 +74,33 @@ export default function OnboardingPage() {
     setError(null);
   }
 
-  if (step === "generating") {
-    return (
-      <main key="generating" className="min-h-screen flex items-center justify-center p-4 screen-enter">
-        <GeneratingScreen onComplete={() => setAnimationDone(true)} />
-      </main>
-    );
-  }
-
-  if (step === "result") {
-    return (
-      <main key="result" className="min-h-screen flex flex-col items-center justify-center p-4 py-10 screen-enter">
-        <ResultScreen
-          html={resultHtml}
-          templateName={templateName}
-          onRestart={handleRestart}
-        />
-      </main>
-    );
-  }
-
   return (
-    <main key="form" className="min-h-screen flex flex-col items-center justify-center p-4 screen-enter">
-      <FormScreen onSubmit={handleFormSubmit} error={error} />
-    </main>
+    <div className="flex min-h-screen bg-slate-50">
+      <Sidebar activeId="vibe-coding" />
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {step === "generating" && (
+          <main key="generating" className="flex-1 flex items-center justify-center p-8 screen-enter">
+            <GeneratingScreen onComplete={() => setAnimationDone(true)} />
+          </main>
+        )}
+
+        {step === "result" && (
+          <main key="result" className="flex-1 flex flex-col p-6 screen-enter overflow-auto">
+            <ResultScreen
+              html={resultHtml}
+              templateName={templateName}
+              onRestart={handleRestart}
+            />
+          </main>
+        )}
+
+        {step === "form" && (
+          <main key="form" className="flex-1 flex flex-col items-center justify-center p-8 screen-enter">
+            <FormScreen onSubmit={handleFormSubmit} error={error} />
+          </main>
+        )}
+      </div>
+    </div>
   );
 }
