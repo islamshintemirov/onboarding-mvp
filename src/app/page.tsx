@@ -94,6 +94,7 @@ export default function OnboardingPage() {
           <ResultScreen
             html={resultHtml}
             templateName={templateName}
+            deviceMode={deviceMode}
             onRestart={handleRestart}
           />
         </div>

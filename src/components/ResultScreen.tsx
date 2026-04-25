@@ -1,25 +1,15 @@
 "use client";
 
-import { useState } from "react";
 import DeviceFrame from "@/components/DeviceFrame";
-
-type DeviceType = "mobile" | "tablet" | "desktop";
 
 interface Props {
   html: string;
   templateName: string;
+  deviceMode: "mobile" | "desktop";
   onRestart: () => void;
 }
 
-const TOGGLES: { id: DeviceType; label: string; icon: string }[] = [
-  { id: "mobile",  label: "Mobile",  icon: "📱" },
-  { id: "tablet",  label: "Tablet",  icon: "⬜" },
-  { id: "desktop", label: "Desktop", icon: "🖥" },
-];
-
-export default function ResultScreen({ html, templateName, onRestart }: Props) {
-  const [active, setActive] = useState<DeviceType>("desktop");
-
+export default function ResultScreen({ html, templateName, deviceMode, onRestart }: Props) {
   return (
     <div className="flex flex-col h-full w-full">
       {/* Header */}
@@ -54,29 +44,9 @@ export default function ResultScreen({ html, templateName, onRestart }: Props) {
         </div>
       </div>
 
-      {/* Toggle bar */}
-      <div className="flex items-center justify-center mb-6 flex-shrink-0">
-        <div className="inline-flex items-center bg-slate-100 rounded-xl p-1 gap-0.5">
-          {TOGGLES.map(({ id, label, icon }) => (
-            <button
-              key={id}
-              onClick={() => setActive(id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                active === id
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              <span className="text-base leading-none">{icon}</span>
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Device preview */}
       <div className="flex-1 flex items-start justify-center overflow-auto pb-6">
-        <DeviceFrame key={active} type={active} html={html} />
+        <DeviceFrame key={deviceMode} type={deviceMode} html={html} />
       </div>
 
       {/* Upsell */}
